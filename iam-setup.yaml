@@ -81,7 +81,7 @@ Resources:
               - "cloudwatch:Describe*"
             Resource: "*"
 
-  # IAM Users and membership to groups
+  # IAM Users and group membership
   DevUser1:
     Type: AWS::IAM::User
     Properties:
@@ -136,20 +136,7 @@ Resources:
       UserName: analyst3
       Groups: [ !Ref AnalystsGroup ]
 
-  # Account Password Policy
-  PasswordPolicy:
-    Type: AWS::IAM::AccountPasswordPolicy
-    Properties:
-      MinimumPasswordLength: 12
-      RequireSymbols: true
-      RequireNumbers: true
-      RequireUppercaseCharacters: true
-      RequireLowercaseCharacters: true
-      AllowUsersToChangePassword: true
-      MaxPasswordAge: 90
-      PasswordReusePrevention: 5
-
-  # MFA enforcement policy (deny all except MFA-related actions if MFA is not present)
+  # MFA enforcement Managed Policy
   EnforceMFAPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
