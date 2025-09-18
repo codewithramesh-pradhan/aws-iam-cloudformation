@@ -1,0 +1,267 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  IAM setup with groups, policies, users, a strong password policy,
+  and enforced MFA for all users.
+
+Resources:
+  # IAM Groups
+  DevelopersGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: "Developers"
+  OperationsGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: "Operations"
+  FinanceGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: "Finance"
+  AnalystsGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: "Analysts"
+
+  # IAM Policies attached to groups
+  DeveloperPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: "DeveloperAccess"
+      Groups: [ !Ref DevelopersGroup ]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "ec2:*"
+              - "s3:*"
+            Resource: "*"
+
+  OperationsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: "OperationsAccess"
+      Groups: [ !Ref OperationsGroup ]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Resource: "*"
+
+  FinancePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: "FinanceAccess"
+      Groups: [ !Ref FinanceGroup ]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "aws-portal:*"
+              - "ce:*"
+            Resource: "*"
+
+  AnalystPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: "AnalystAccess"
+      Groups: [ !Ref AnalystsGroup ]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:Get*"
+              - "ec2:Describe*"
+              - "rds:Describe*"
+              - "cloudwatch:Get*"
+              - "cloudwatch:List*"
+              - "cloudwatch:Describe*"
+            Resource: "*"
+
+  # IAM Users and membership to groups
+  DevUser1:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: dev1
+      Groups: [ !Ref DevelopersGroup ]
+  DevUser2:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: dev2
+      Groups: [ !Ref DevelopersGroup ]
+  DevUser3:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: dev3
+      Groups: [ !Ref DevelopersGroup ]
+  DevUser4:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: dev4
+      Groups: [ !Ref DevelopersGroup ]
+
+  OpsUser1:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: ops1
+      Groups: [ !Ref OperationsGroup ]
+  OpsUser2:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: ops2
+      Groups: [ !Ref OperationsGroup ]
+
+  FinanceUser1:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: finance1
+      Groups: [ !Ref FinanceGroup ]
+
+  AnalystUser1:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: analyst1
+      Groups: [ !Ref AnalystsGroup ]
+  AnalystUser2:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: analyst2
+      Groups: [ !Ref AnalystsGroup ]
+  AnalystUser3:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: analyst3
+      Groups: [ !Ref AnalystsGroup ]
+
+  # Account Password Policy
+  PasswordPolicy:
+    Type: AWS::IAM::AccountPasswordPolicy
+    Properties:
+      MinimumPasswordLength: 12
+      RequireSymbols: true
+      RequireNumbers: true
+      RequireUppercaseCharacters: true
+      RequireLowercaseCharacters: true
+      AllowUsersToChangePassword: true
+      MaxPasswordAge: 90
+      PasswordReusePrevention: 5
+
+  # MFA enforcement policy (deny all except MFA-related actions if MFA is not present)
+  EnforceMFAPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: EnforceUseOfMFA
+      Description: "Require MFA for all IAM actions except MFA device management"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "DenyAllExceptMFA"
+            Effect: Deny
+            NotAction:
+              - "iam:CreateVirtualMFADevice"
+              - "iam:EnableMFADevice"
+              - "iam:GetUser"
+              - "iam:ListMFADevices"
+              - "iam:ListVirtualMFADevices"
+              - "iam:ResyncMFADevice"
+              - "sts:GetSessionToken"
+            Resource: "*"
+            Condition:
+              BoolIfExists:
+                aws:MultiFactorAuthPresent: "false"
+
+  # Attaching MFA enforcement policy as inline group policies to groups
+  AttachMFADevelopers:
+    Type: AWS::IAM::GroupPolicy
+    Properties:
+      GroupName: !Ref DevelopersGroup
+      PolicyName: EnforceUseOfMFA
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Deny
+            NotAction:
+              - "iam:CreateVirtualMFADevice"
+              - "iam:EnableMFADevice"
+              - "iam:GetUser"
+              - "iam:ListMFADevices"
+              - "iam:ListVirtualMFADevices"
+              - "iam:ResyncMFADevice"
+              - "sts:GetSessionToken"
+            Resource: "*"
+            Condition:
+              BoolIfExists:
+                aws:MultiFactorAuthPresent: "false"
+
+  AttachMFAOperations:
+    Type: AWS::IAM::GroupPolicy
+    Properties:
+      GroupName: !Ref OperationsGroup
+      PolicyName: EnforceUseOfMFA
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Deny
+            NotAction:
+              - "iam:CreateVirtualMFADevice"
+              - "iam:EnableMFADevice"
+              - "iam:GetUser"
+              - "iam:ListMFADevices"
+              - "iam:ListVirtualMFADevices"
+              - "iam:ResyncMFADevice"
+              - "sts:GetSessionToken"
+            Resource: "*"
+            Condition:
+              BoolIfExists:
+                aws:MultiFactorAuthPresent: "false"
+
+  AttachMFAFinance:
+    Type: AWS::IAM::GroupPolicy
+    Properties:
+      GroupName: !Ref FinanceGroup
+      PolicyName: EnforceUseOfMFA
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Deny
+            NotAction:
+              - "iam:CreateVirtualMFADevice"
+              - "iam:EnableMFADevice"
+              - "iam:GetUser"
+              - "iam:ListMFADevices"
+              - "iam:ListVirtualMFADevices"
+              - "iam:ResyncMFADevice"
+              - "sts:GetSessionToken"
+            Resource: "*"
+            Condition:
+              BoolIfExists:
+                aws:MultiFactorAuthPresent: "false"
+
+  AttachMFAAnalysts:
+    Type: AWS::IAM::GroupPolicy
+    Properties:
+      GroupName: !Ref AnalystsGroup
+      PolicyName: EnforceUseOfMFA
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Deny
+            NotAction:
+              - "iam:CreateVirtualMFADevice"
+              - "iam:EnableMFADevice"
+              - "iam:GetUser"
+              - "iam:ListMFADevices"
+              - "iam:ListVirtualMFADevices"
+              - "iam:ResyncMFADevice"
+              - "sts:GetSessionToken"
+            Resource: "*"
+            Condition:
+              BoolIfExists:
+                aws:MultiFactorAuthPresent: "false"
+
+# Note:
+# After creating users, instruct them to activate MFA devices in the AWS Console or via CLI.
+# This template enforces use of MFA by denying all non-MFA sessions other than MFA setup actions.
