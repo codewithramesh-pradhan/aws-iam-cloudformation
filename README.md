@@ -1,4 +1,3 @@
-
 # AWS IAM CloudFormation Setup
 
 A comprehensive AWS Identity and Access Management (IAM) solution implementing role-based access control (RBAC) with security best practices through Infrastructure as Code.
@@ -126,7 +125,7 @@ Resources:
     Type: AWS::IAM::Group
     Properties:
       GroupName: "Developers"
-
+  
   # IAM Policies
   DeveloperPolicy:
     Type: AWS::IAM::Policy
