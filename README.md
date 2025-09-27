@@ -12,6 +12,18 @@ This repository documents a comprehensive enterprise-grade zero-trust security a
 
 *Complete 6-layer zero-trust security architecture with AWS services and security controls*
 
+### 🔐 Role-Based Access Control (RBAC) Architecture
+
+![RBAC Architecture](zero_trust_rbac_architecture.png)
+
+*Enhanced architecture showing which user groups can access what services*
+
+### 📊 Access Control Matrix
+
+![Access Control Matrix](rbac_access_matrix.png)
+
+*Detailed matrix showing specific permissions for each role*
+
 ### Layer 1: Identity & Access Management (Zero-Trust Foundation)
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -38,6 +50,19 @@ This repository documents a comprehensive enterprise-grade zero-trust security a
 - `aws:TokenIssueTime` validation for session freshness
 - Deny-all policies for non-MFA authenticated sessions
 - Regular access reviews and automated cleanup
+
+#### **Role-Based Access Control (RBAC) Matrix:**
+
+| User Role | EC2 | S3 | RDS | Lambda | IAM | KMS | CloudTrail | GuardDuty |
+|-----------|-----|----|----|--------|-----|-----|------------|-----------|
+| **End Users** | ❌ None | ✅ Read (App data) | ❌ None | ❌ None | ❌ None | ❌ None | ❌ None | ❌ None |
+| **Developers** | 🟡 Start/Stop | ✅ Read/Write | 🟡 Read Only | ✅ Full | ❌ None | 🟡 App Keys | ❌ None | ❌ None |
+| **Security Admins** | 🟡 Read | ✅ Full (Logs) | ❌ None | 🟡 Read | ✅ Full | ✅ Security Keys | ✅ Full | ✅ Full |
+| **System Admins** | ✅ Full | 🟡 Read | ❌ None | ❌ None | 🟡 User Mgmt | ❌ None | ❌ None | ❌ None |
+| **Database Admins** | ❌ None | ❌ None | ✅ Full | ❌ None | ❌ None | 🟡 DB Keys | ❌ None | ❌ None |
+| **Auditors** | ❌ None | 🟡 Read (Logs) | ❌ None | ❌ None | ❌ None | ❌ None | 🟡 Read | 🟡 Read |
+
+**Legend:** ✅ Full Access | 🟡 Limited Access | ❌ No Access
 
 ### Layer 2: Network Security (Micro-segmentation)
 ```
