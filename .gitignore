@@ -5,6 +5,13 @@
 .terraform/
 .terraform.lock.hcl
 
+# CloudFormation templates (stored locally only)
+*.yaml
+*.yml
+*.json
+cloudformation/
+templates/
+
 # AWS CLI
 .aws/
 aws-exports.js
