@@ -8,6 +8,10 @@ This repository documents a comprehensive enterprise-grade zero-trust security a
 
 ## 🏗️ Six-Layer Security Architecture
 
+![Enterprise Zero-Trust Security Architecture](zero_trust_architecture.png)
+
+*Complete 6-layer zero-trust security architecture with AWS services and security controls*
+
 ### Layer 1: Identity & Access Management (Zero-Trust Foundation)
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -208,6 +212,17 @@ Monitoring:
 ```
 
 ## 🔧 Deployment Guide
+
+### Architecture Diagram Generation
+Generate updated architecture diagrams based on the current repository documentation:
+
+```bash
+# Generate architecture diagram
+python3 generate_architecture_diagram.py
+
+# View the generated diagram
+open zero_trust_architecture.png
+```
 
 ### Prerequisites
 - AWS CLI v2.x configured with appropriate permissions
