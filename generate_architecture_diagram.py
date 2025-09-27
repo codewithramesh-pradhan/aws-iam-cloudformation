@@ -1,193 +1,157 @@
 #!/usr/bin/env python3
 """
-AWS Zero-Trust Security Architecture Diagram Generator with RBAC Access Control
+AWS Zero-Trust Security Architecture with Specific User Groups
 """
 
 from diagrams import Diagram, Cluster, Edge
 from diagrams.aws.compute import Lambda, EC2
 from diagrams.aws.database import RDS
-from diagrams.aws.network import VPC, ALB
+from diagrams.aws.network import ALB
 from diagrams.aws.security import IAM, KMS, SecretsManager, Guardduty, SecurityHub, WAF
 from diagrams.aws.storage import S3
 from diagrams.aws.management import Cloudtrail, Cloudwatch, SystemsManager, Config
 from diagrams.aws.integration import SNS
-from diagrams.aws.general import User, Users
+from diagrams.aws.general import User
 from diagrams.onprem.client import Client
 
 def create_rbac_architecture():
-    """Generate architecture diagram with Role-Based Access Control matrix"""
+    """Generate architecture with specific user groups: Developer, Analyst, Operations, Finance"""
     
-    with Diagram("Enterprise Zero-Trust Architecture with RBAC Access Control", 
+    with Diagram("Enterprise Zero-Trust Architecture - User Group Access Control", 
                  filename="zero_trust_rbac_architecture", 
                  show=False, 
                  direction="TB"):
         
-        # User Groups with specific roles
-        with Cluster("User Groups & Roles"):
-            end_users = Users("End Users\nRole: ReadOnlyAccess")
-            developers = User("Developers\nRole: DeveloperAccess")
-            security_admin = User("Security Admin\nRole: SecurityAudit")
-            sys_admin = User("System Admin\nRole: PowerUserAccess")
-            dba = User("Database Admin\nRole: DatabaseAccess")
+        # Specific User Groups
+        with Cluster("User Groups"):
+            developer = User("Developer\nRole: DeveloperAccess")
+            analyst = User("Analyst\nRole: AnalystAccess") 
+            operations = User("Operations\nRole: OperationsAccess")
+            finance = User("Finance\nRole: FinanceAccess")
             
-        # Layer 1: Identity & Access Management with RBAC
+        # IAM Roles with specific permissions
         with Cluster("Layer 1: IAM - Role-Based Access Control"):
             with Cluster("IAM Roles & Policies"):
-                readonly_role = IAM("ReadOnlyRole\n• S3: GetObject\n• EC2: Describe*\n• RDS: Describe*")
-                dev_role = IAM("DeveloperRole\n• S3: Read/Write\n• Lambda: Full\n• EC2: Start/Stop")
-                security_role = IAM("SecurityRole\n• CloudTrail: Full\n• GuardDuty: Full\n• SecurityHub: Full")
-                admin_role = IAM("AdminRole\n• EC2: Full\n• Systems Manager: Full\n• Config: Full")
-                dba_role = IAM("DBARole\n• RDS: Full\n• Secrets: Database*\n• KMS: Database keys")
+                dev_role = IAM("DeveloperRole\n• S3: App buckets (RW)\n• Lambda: Full\n• EC2: Dev instances\n• RDS: Dev DB (RW)")
+                analyst_role = IAM("AnalystRole\n• S3: Analytics data (R)\n• CloudWatch: Metrics (R)\n• RDS: Read replicas (R)\n• QuickSight: Full")
+                ops_role = IAM("OperationsRole\n• EC2: Full\n• Systems Manager: Full\n• CloudWatch: Full\n• Config: Full")
+                finance_role = IAM("FinanceRole\n• S3: Billing data (R)\n• Cost Explorer: Full\n• CloudWatch: Billing (R)\n• Trusted Advisor: R")
             
-        # Layer 2: Network Security with Access Controls
+        # Network Security
         with Cluster("Layer 2: Network Security"):
-            with Cluster("VPC (10.0.0.0/16) - Network Access Control"):
-                waf = WAF("AWS WAF\nAccess: Security Admin")
-                alb = ALB("Application LB\nAccess: System Admin")
+            with Cluster("VPC (10.0.0.0/16)"):
+                waf = WAF("AWS WAF\nAccess: Operations")
+                alb = ALB("Application LB\nAccess: Operations")
                 
                 with Cluster("Private Subnet (10.0.1.0/24)"):
-                    web_server = EC2("Web Server\nAccess: Developers, Admins\nSG: Port 443 from ALB")
+                    web_server = EC2("Web Server\nAccess: Developer, Operations")
                     
                 with Cluster("Private Subnet (10.0.2.0/24)"):
-                    app_server = EC2("App Server\nAccess: Developers, Admins\nSG: Port 8080 from Web")
-                    security_lambda = Lambda("Security Functions\nAccess: Security Admin")
+                    app_server = EC2("App Server\nAccess: Developer, Operations")
+                    security_lambda = Lambda("Security Functions\nAccess: Operations")
         
-        # Layer 3: Data Protection with Data Access Controls
-        with Cluster("Layer 3: Data Protection - Data Access Matrix"):
-            kms = KMS("KMS Keys\nAccess: Key Admins\n• App Keys: Developers\n• DB Keys: DBAs\n• Security Keys: Sec Admin")
-            secrets = SecretsManager("Secrets Manager\nAccess: Service Roles\n• DB Secrets: DBA Role\n• App Secrets: Dev Role")
+        # Data Protection
+        with Cluster("Layer 3: Data Protection"):
+            kms = KMS("KMS Keys\nAccess: Operations (Admin)\nDeveloper (App keys)")
+            secrets = SecretsManager("Secrets Manager\nAccess: Developer, Operations")
             
-            with Cluster("Data Storage Access Control"):
-                s3_app = S3("Application Data\nAccess: Developers (RW)\nEnd Users (R)")
-                s3_logs = S3("Security Logs\nAccess: Security Admin (RW)\nAuditors (R)")
-                rds_db = RDS("Production DB\nAccess: DBA (Full)\nDevelopers (Read)\nApps (Limited)")
+            with Cluster("Data Storage"):
+                s3_app = S3("Application Data\nAccess: Developer (RW)")
+                s3_analytics = S3("Analytics Data\nAccess: Analyst (R)")
+                s3_billing = S3("Billing Data\nAccess: Finance (R)")
+                rds_prod = RDS("Production DB\nAccess: Operations (Admin)\nAnalyst (Read replica)")
+                rds_dev = RDS("Development DB\nAccess: Developer (RW)")
             
-        # Layer 4: Application Security
-        with Cluster("Layer 4: Application Security"):
-            container_sec = EC2("Container Security\nAccess: Developers, Security")
+        # Monitoring & Compliance
+        with Cluster("Layer 5: Monitoring"):
+            cloudtrail = Cloudtrail("CloudTrail\nAccess: Operations (RW)")
+            guardduty = Guardduty("GuardDuty\nAccess: Operations (Full)")
+            security_hub = SecurityHub("Security Hub\nAccess: Operations (Full)")
+            config = Config("Config Rules\nAccess: Operations (RW)")
+            cloudwatch = Cloudwatch("CloudWatch\nAccess: All (Metrics)\nOperations (Logs)")
             
-        # Layer 5: Monitoring & Compliance with Access Segregation
-        with Cluster("Layer 5: Monitoring - Segregated Access"):
-            cloudtrail = Cloudtrail("CloudTrail\nAccess: Security Admin (RW)\nAuditors (R)")
-            guardduty = Guardduty("GuardDuty\nAccess: Security Admin (Full)\nSOC Team (R)")
-            security_hub = SecurityHub("Security Hub\nAccess: Security Team (Full)\nManagement (R)")
-            config = Config("Config Rules\nAccess: Compliance Team (RW)\nAuditors (R)")
-            cloudwatch = Cloudwatch("CloudWatch\nAccess: All Roles (Metrics)\nAdmins (Logs)")
-            
-        # Layer 6: Incident Response with Response Team Access
+        # Incident Response
         with Cluster("Layer 6: Incident Response"):
-            sns = SNS("Security Alerts\nAccess: Security Team\nEscalation: Management")
-            systems_manager = SystemsManager("Systems Manager\nAccess: System Admins\nEmergency: Security Team")
+            sns = SNS("Security Alerts\nAccess: Operations")
+            systems_manager = SystemsManager("Systems Manager\nAccess: Operations")
             
-        # RBAC Access Flow
-        end_users >> Edge(label="Read-Only Access", color="green") >> readonly_role
-        developers >> Edge(label="Development Access", color="blue") >> dev_role
-        security_admin >> Edge(label="Security Operations", color="red") >> security_role
-        sys_admin >> Edge(label="System Operations", color="orange") >> admin_role
-        dba >> Edge(label="Database Operations", color="purple") >> dba_role
+        # Access Flow
+        developer >> Edge(label="Development Access", color="blue") >> dev_role
+        analyst >> Edge(label="Analytics Access", color="green") >> analyst_role
+        operations >> Edge(label="Operations Access", color="red") >> ops_role
+        finance >> Edge(label="Finance Access", color="orange") >> finance_role
         
-        # Service Access Mapping
-        readonly_role >> Edge(label="Read", color="green") >> [s3_app, cloudwatch]
-        dev_role >> Edge(label="Read/Write", color="blue") >> [s3_app, web_server, app_server, container_sec]
-        security_role >> Edge(label="Full Access", color="red") >> [cloudtrail, guardduty, security_hub, security_lambda, s3_logs]
-        admin_role >> Edge(label="Admin Access", color="orange") >> [web_server, app_server, alb, systems_manager, config]
-        dba_role >> Edge(label="Database Access", color="purple") >> [rds_db, secrets, kms]
+        # Service Access
+        dev_role >> Edge(label="RW", color="blue") >> [s3_app, rds_dev, web_server, app_server]
+        analyst_role >> Edge(label="Read", color="green") >> [s3_analytics, rds_prod, cloudwatch]
+        ops_role >> Edge(label="Full", color="red") >> [waf, alb, web_server, app_server, cloudtrail, guardduty, security_hub, config, systems_manager]
+        finance_role >> Edge(label="Read", color="orange") >> [s3_billing, cloudwatch]
         
-        # Cross-layer security monitoring
-        [web_server, app_server, rds_db, s3_app] >> Edge(label="Audit Trail", style="dashed") >> cloudtrail
-        [web_server, app_server, rds_db] >> Edge(label="Threat Detection", style="dashed") >> guardduty
-        
-        # Incident response flow
-        guardduty >> Edge(label="High Severity Alert", color="red") >> sns
-        sns >> Edge(label="Notify", color="red") >> [security_admin, sys_admin]
+        # Monitoring flow
+        [web_server, app_server, rds_prod, s3_app] >> Edge(label="Audit", style="dashed") >> cloudtrail
+        guardduty >> Edge(label="Alert", color="red") >> sns >> operations
 
 def create_access_control_matrix():
-    """Generate detailed access control matrix diagram"""
+    """Generate access control matrix for specific user groups"""
     
-    with Diagram("RBAC Access Control Matrix - Who Can Access What", 
+    with Diagram("Access Control Matrix - Developer | Analyst | Operations | Finance", 
                  filename="rbac_access_matrix", 
                  show=False, 
                  direction="LR"):
         
-        # User Roles
-        with Cluster("User Roles"):
-            end_user = User("End User")
-            developer = User("Developer") 
-            security = User("Security Admin")
-            sysadmin = User("System Admin")
-            dba = User("DBA")
-            auditor = User("Auditor")
+        # User Groups
+        with Cluster("User Groups"):
+            developer = User("Developer")
+            analyst = User("Analyst") 
+            operations = User("Operations")
+            finance = User("Finance")
             
-        # AWS Services with Access Levels
+        # AWS Services
         with Cluster("AWS Services - Access Levels"):
-            with Cluster("Compute Services"):
-                ec2 = EC2("EC2 Instances\n• End User: None\n• Developer: Start/Stop\n• SysAdmin: Full\n• Security: Read")
-                lambda_svc = Lambda("Lambda Functions\n• Developer: Full\n• Security: Read\n• Others: None")
+            with Cluster("Compute"):
+                ec2 = EC2("EC2\n• Developer: Dev instances\n• Operations: Full\n• Others: None")
+                lambda_svc = Lambda("Lambda\n• Developer: Full\n• Operations: Read\n• Others: None")
                 
-            with Cluster("Storage Services"):
-                s3 = S3("S3 Buckets\n• End User: Read (App data)\n• Developer: Read/Write\n• Security: Full (Logs)\n• Auditor: Read")
+            with Cluster("Storage"):
+                s3 = S3("S3 Buckets\n• Developer: App data (RW)\n• Analyst: Analytics (R)\n• Finance: Billing (R)\n• Operations: Logs (RW)")
                 
-            with Cluster("Database Services"):
-                rds = RDS("RDS Database\n• DBA: Full Access\n• Developer: Read Only\n• App: Limited Write\n• Others: None")
+            with Cluster("Database"):
+                rds = RDS("RDS\n• Developer: Dev DB (RW)\n• Analyst: Read replicas\n• Operations: Full\n• Finance: None")
                 
-            with Cluster("Security Services"):
-                iam_svc = IAM("IAM\n• Security: Full\n• SysAdmin: User Mgmt\n• Others: Self-service")
-                kms_svc = KMS("KMS\n• Security: Key Admin\n• DBA: DB Keys\n• Developer: App Keys")
+            with Cluster("Security"):
+                iam_svc = IAM("IAM\n• Operations: Full\n• Others: Self-service")
+                kms_svc = KMS("KMS\n• Operations: Admin\n• Developer: App keys\n• Others: None")
                 
-            with Cluster("Monitoring Services"):
-                trail = Cloudtrail("CloudTrail\n• Security: Full\n• Auditor: Read\n• Others: None")
-                guard = Guardduty("GuardDuty\n• Security: Full\n• SOC: Read\n• Others: None")
+            with Cluster("Monitoring"):
+                cw = Cloudwatch("CloudWatch\n• All: Metrics (R)\n• Operations: Logs (RW)\n• Finance: Billing (R)")
+                trail = Cloudtrail("CloudTrail\n• Operations: Full\n• Others: None")
         
-        # Access relationships with different colors for access levels
-        # End User Access (Green - Read Only)
-        end_user >> Edge(label="Read", color="green") >> s3
+        # Access relationships
+        developer >> Edge(label="RW", color="blue") >> [s3, lambda_svc, rds]
+        developer >> Edge(label="Limited", color="lightblue") >> [ec2, kms_svc]
         
-        # Developer Access (Blue - Read/Write)
-        developer >> Edge(label="Read/Write", color="blue") >> [s3, lambda_svc]
-        developer >> Edge(label="Start/Stop", color="blue") >> ec2
-        developer >> Edge(label="Read", color="green") >> rds
+        analyst >> Edge(label="Read", color="green") >> [s3, rds, cw]
         
-        # Security Admin Access (Red - Full)
-        security >> Edge(label="Full", color="red") >> [iam_svc, kms_svc, trail, guard]
-        security >> Edge(label="Read", color="green") >> [ec2, s3]
+        operations >> Edge(label="Full", color="red") >> [ec2, s3, rds, iam_svc, kms_svc, cw, trail]
         
-        # System Admin Access (Orange - Admin)
-        sysadmin >> Edge(label="Full", color="orange") >> ec2
-        sysadmin >> Edge(label="User Mgmt", color="orange") >> iam_svc
-        
-        # DBA Access (Purple - Database)
-        dba >> Edge(label="Full", color="purple") >> rds
-        dba >> Edge(label="DB Keys", color="purple") >> kms_svc
-        
-        # Auditor Access (Gray - Read Only)
-        auditor >> Edge(label="Read", color="gray") >> [s3, trail]
+        finance >> Edge(label="Read", color="orange") >> [s3, cw]
 
 if __name__ == "__main__":
-    print("🔍 Generating Enhanced RBAC Architecture Diagrams...")
+    print("🔍 Generating RBAC Architecture for User Groups: Developer, Analyst, Operations, Finance...")
     
-    # Generate RBAC architecture
     create_rbac_architecture()
     print("✅ RBAC architecture diagram generated")
     
-    # Generate access control matrix
     create_access_control_matrix()
     print("✅ Access control matrix diagram generated")
     
-    print("\n🎯 Enhanced Architecture Diagrams with RBAC!")
+    print("\n🎯 User Group Access Control!")
     print("\n📁 Files created:")
-    print("├── zero_trust_rbac_architecture.png - Complete architecture with RBAC")
-    print("└── rbac_access_matrix.png - Detailed access control matrix")
+    print("├── zero_trust_rbac_architecture.png")
+    print("└── rbac_access_matrix.png")
     
-    print("\n🔐 RBAC Implementation:")
-    print("┌─ End Users: Read-only access to application data")
-    print("├─ Developers: Read/write to development resources")
-    print("├─ Security Admins: Full access to security services")
-    print("├─ System Admins: Full access to infrastructure")
-    print("├─ DBAs: Full access to database resources")
-    print("└─ Auditors: Read-only access to logs and compliance data")
-    
-    print("\n🛡️ Access Control Principles:")
-    print("• Principle of Least Privilege")
-    print("• Separation of Duties")
-    print("• Need-to-Know Basis")
-    print("• Regular Access Reviews")
+    print("\n👥 User Groups & Access:")
+    print("├─ Developer: App development resources (S3, Lambda, Dev RDS, Dev EC2)")
+    print("├─ Analyst: Read-only analytics data (S3 analytics, RDS replicas, CloudWatch)")
+    print("├─ Operations: Full infrastructure access (EC2, monitoring, security services)")
+    print("└─ Finance: Billing and cost data (S3 billing, CloudWatch billing metrics)")

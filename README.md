@@ -53,14 +53,12 @@ This repository documents a comprehensive enterprise-grade zero-trust security a
 
 #### **Role-Based Access Control (RBAC) Matrix:**
 
-| User Role | EC2 | S3 | RDS | Lambda | IAM | KMS | CloudTrail | GuardDuty |
-|-----------|-----|----|----|--------|-----|-----|------------|-----------|
-| **End Users** | ❌ None | ✅ Read (App data) | ❌ None | ❌ None | ❌ None | ❌ None | ❌ None | ❌ None |
-| **Developers** | 🟡 Start/Stop | ✅ Read/Write | 🟡 Read Only | ✅ Full | ❌ None | 🟡 App Keys | ❌ None | ❌ None |
-| **Security Admins** | 🟡 Read | ✅ Full (Logs) | ❌ None | 🟡 Read | ✅ Full | ✅ Security Keys | ✅ Full | ✅ Full |
-| **System Admins** | ✅ Full | 🟡 Read | ❌ None | ❌ None | 🟡 User Mgmt | ❌ None | ❌ None | ❌ None |
-| **Database Admins** | ❌ None | ❌ None | ✅ Full | ❌ None | ❌ None | 🟡 DB Keys | ❌ None | ❌ None |
-| **Auditors** | ❌ None | 🟡 Read (Logs) | ❌ None | ❌ None | ❌ None | ❌ None | 🟡 Read | 🟡 Read |
+| User Group | EC2 | S3 | RDS | Lambda | IAM | KMS | CloudTrail | CloudWatch |
+|------------|-----|----|----|--------|-----|-----|------------|------------|
+| **Developer** | 🟡 Dev instances | ✅ App data (RW) | ✅ Dev DB (RW) | ✅ Full | ❌ Self-service | 🟡 App keys | ❌ None | 🟡 Metrics (R) |
+| **Analyst** | ❌ None | 🟡 Analytics (R) | 🟡 Read replicas | ❌ None | ❌ Self-service | ❌ None | ❌ None | ✅ Metrics (R) |
+| **Operations** | ✅ Full | ✅ All buckets | ✅ Full | 🟡 Read | ✅ Full | ✅ Admin | ✅ Full | ✅ Full |
+| **Finance** | ❌ None | 🟡 Billing (R) | ❌ None | ❌ None | ❌ Self-service | ❌ None | ❌ None | 🟡 Billing (R) |
 
 **Legend:** ✅ Full Access | 🟡 Limited Access | ❌ No Access
 
