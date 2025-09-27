@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-AWS Zero-Trust Security Architecture with Specific User Groups
+Enhanced AWS Zero-Trust Security Architecture Diagram Generator
+Optimized for readability, distinct layers, and proper flow visualization
 """
 
 from diagrams import Diagram, Cluster, Edge
@@ -11,147 +12,196 @@ from diagrams.aws.security import IAM, KMS, SecretsManager, Guardduty, SecurityH
 from diagrams.aws.storage import S3
 from diagrams.aws.management import Cloudtrail, Cloudwatch, SystemsManager, Config
 from diagrams.aws.integration import SNS
-from diagrams.aws.general import User
+from diagrams.aws.general import User, Users
 from diagrams.onprem.client import Client
 
-def create_rbac_architecture():
-    """Generate architecture with specific user groups: Developer, Analyst, Operations, Finance"""
+def create_enhanced_zero_trust_architecture():
+    """Generate enhanced zero-trust architecture with optimized flow and readability"""
     
-    with Diagram("Enterprise Zero-Trust Architecture - User Group Access Control", 
-                 filename="zero_trust_rbac_architecture", 
+    graph_attr = {
+        "fontsize": "16",
+        "fontname": "Arial Bold",
+        "bgcolor": "white",
+        "pad": "1.5",
+        "nodesep": "1.2",
+        "ranksep": "2.0"
+    }
+    
+    with Diagram("Enterprise Zero-Trust Security Architecture\n🛡️ 6-Layer Defense-in-Depth Model", 
+                 filename="diagrams/zero_trust_architecture", 
                  show=False, 
-                 direction="TB"):
+                 direction="TB",
+                 graph_attr=graph_attr):
         
-        # Specific User Groups
-        with Cluster("User Groups"):
-            developer = User("Developer\nRole: DeveloperAccess")
-            analyst = User("Analyst\nRole: AnalystAccess") 
-            operations = User("Operations\nRole: OperationsAccess")
-            finance = User("Finance\nRole: FinanceAccess")
+        # External Threat Environment
+        with Cluster("🌐 External Environment", graph_attr={"bgcolor": "#ffcdd2", "style": "rounded,bold"}):
+            internet = Client("Internet\n🌍 Untrusted Network")
+            threats = Client("External Threats\n⚠️ Potential Attackers")
+        
+        # Authenticated Users - Entry Point
+        with Cluster("👥 Enterprise Users", graph_attr={"bgcolor": "#c8e6c9", "style": "rounded,bold"}):
+            developer = User("Developer\n🔧 Application Development")
+            analyst = User("Analyst\n📊 Data Analysis") 
+            operations = User("Operations\n⚙️ Infrastructure Management")
+            finance = User("Finance\n💰 Cost & Billing")
             
-        # IAM Roles with specific permissions
-        with Cluster("Layer 1: IAM - Role-Based Access Control"):
-            with Cluster("IAM Roles & Policies"):
-                dev_role = IAM("DeveloperRole\n• S3: App buckets (RW)\n• Lambda: Full\n• EC2: Dev instances\n• RDS: Dev DB (RW)")
-                analyst_role = IAM("AnalystRole\n• S3: Analytics data (R)\n• CloudWatch: Metrics (R)\n• RDS: Read replicas (R)\n• QuickSight: Full")
-                ops_role = IAM("OperationsRole\n• EC2: Full\n• Systems Manager: Full\n• CloudWatch: Full\n• Config: Full")
-                finance_role = IAM("FinanceRole\n• S3: Billing data (R)\n• Cost Explorer: Full\n• CloudWatch: Billing (R)\n• Trusted Advisor: R")
+        # Layer 1: Identity & Access Management
+        with Cluster("🛡️ LAYER 1: Identity & Access Management\n🔐 Zero-Trust Foundation", 
+                     graph_attr={"bgcolor": "#fff3e0", "style": "rounded,bold", "penwidth": "4", "color": "#ff9800"}):
             
-        # Network Security
-        with Cluster("Layer 2: Network Security"):
-            with Cluster("VPC (10.0.0.0/16)"):
-                waf = WAF("AWS WAF\nAccess: Operations")
-                alb = ALB("Application LB\nAccess: Operations")
+            with Cluster("Multi-Factor Authentication", graph_attr={"bgcolor": "#ffe0b2"}):
+                iam_mfa = IAM("MFA Gateway\n🔐 Required for All Access\n• Hardware Tokens\n• Biometric Auth\n• Time-based OTP")
                 
-                with Cluster("Private Subnet (10.0.1.0/24)"):
-                    web_server = EC2("Web Server\nAccess: Developer, Operations")
+            with Cluster("Role-Based Access Control", graph_attr={"bgcolor": "#ffcc80"}):
+                dev_role = IAM("Developer Role\n🔧 Development Access\n• S3: App Data (RW)\n• Lambda: Full Control\n• EC2: Dev Instances")
+                analyst_role = IAM("Analyst Role\n📊 Analytics Access\n• S3: Analytics (Read)\n• RDS: Read Replicas\n• CloudWatch: Metrics")
+                ops_role = IAM("Operations Role\n⚙️ Infrastructure Control\n• Full EC2 Access\n• Security Services\n• Monitoring Tools")
+                finance_role = IAM("Finance Role\n💰 Billing Access\n• Cost Explorer\n• Billing Reports\n• Budget Alerts")
+        
+        # Layer 2: Network Security
+        with Cluster("🔒 LAYER 2: Network Security\n🛡️ Perimeter Defense & Micro-segmentation", 
+                     graph_attr={"bgcolor": "#e3f2fd", "style": "rounded,bold", "penwidth": "4", "color": "#2196f3"}):
+            
+            with Cluster("Application Firewall", graph_attr={"bgcolor": "#bbdefb"}):
+                waf = WAF("AWS WAF\n🛡️ Web Application Firewall\n• DDoS Protection\n• SQL Injection Block\n• XSS Prevention\n• Rate Limiting")
+            
+            with Cluster("Load Balancing", graph_attr={"bgcolor": "#90caf9"}):
+                alb = ALB("Application Load Balancer\n⚖️ High Availability\n• TLS 1.3 Termination\n• Health Checks\n• SSL Certificates")
+            
+            with Cluster("VPC Isolation (10.0.0.0/16)", graph_attr={"bgcolor": "#64b5f6"}):
+                with Cluster("AZ-A: Private Subnet (10.0.1.0/24)"):
+                    web_server = EC2("Web Server\n🌐 Frontend Layer\n• Security Group: Port 443\n• Private IP Only\n• Auto Scaling")
                     
-                with Cluster("Private Subnet (10.0.2.0/24)"):
-                    app_server = EC2("App Server\nAccess: Developer, Operations")
-                    security_lambda = Lambda("Security Functions\nAccess: Operations")
+                with Cluster("AZ-B: Private Subnet (10.0.2.0/24)"):
+                    app_server = EC2("Application Server\n⚙️ Business Logic\n• Security Group: Port 8080\n• Internal Communication\n• Load Balanced")
+                    
+                with Cluster("Security Automation"):
+                    security_lambda = Lambda("Security Functions\n🤖 Automated Response\n• Threat Remediation\n• Incident Response\n• Policy Enforcement")
         
-        # Data Protection
-        with Cluster("Layer 3: Data Protection"):
-            kms = KMS("KMS Keys\nAccess: Operations (Admin)\nDeveloper (App keys)")
-            secrets = SecretsManager("Secrets Manager\nAccess: Developer, Operations")
+        # Layer 3: Data Protection
+        with Cluster("🔐 LAYER 3: Data Protection\n🔑 Encryption Everywhere", 
+                     graph_attr={"bgcolor": "#f3e5f5", "style": "rounded,bold", "penwidth": "4", "color": "#9c27b0"}):
             
-            with Cluster("Data Storage"):
-                s3_app = S3("Application Data\nAccess: Developer (RW)")
-                s3_analytics = S3("Analytics Data\nAccess: Analyst (R)")
-                s3_billing = S3("Billing Data\nAccess: Finance (R)")
-                rds_prod = RDS("Production DB\nAccess: Operations (Admin)\nAnalyst (Read replica)")
-                rds_dev = RDS("Development DB\nAccess: Developer (RW)")
+            with Cluster("Key Management", graph_attr={"bgcolor": "#e1bee7"}):
+                kms = KMS("AWS KMS\n🔑 Customer Managed Keys\n• Auto Rotation (365d)\n• Hardware Security Modules\n• Usage Auditing")
+                secrets = SecretsManager("Secrets Manager\n🔒 Credential Vault\n• Automatic Rotation\n• Cross-service Integration\n• Encrypted Storage")
             
-        # Monitoring & Compliance
-        with Cluster("Layer 5: Monitoring"):
-            cloudtrail = Cloudtrail("CloudTrail\nAccess: Operations (RW)")
-            guardduty = Guardduty("GuardDuty\nAccess: Operations (Full)")
-            security_hub = SecurityHub("Security Hub\nAccess: Operations (Full)")
-            config = Config("Config Rules\nAccess: Operations (RW)")
-            cloudwatch = Cloudwatch("CloudWatch\nAccess: All (Metrics)\nOperations (Logs)")
-            
-        # Incident Response
-        with Cluster("Layer 6: Incident Response"):
-            sns = SNS("Security Alerts\nAccess: Operations")
-            systems_manager = SystemsManager("Systems Manager\nAccess: Operations")
-            
-        # Access Flow
-        developer >> Edge(label="Development Access", color="blue") >> dev_role
-        analyst >> Edge(label="Analytics Access", color="green") >> analyst_role
-        operations >> Edge(label="Operations Access", color="red") >> ops_role
-        finance >> Edge(label="Finance Access", color="orange") >> finance_role
+            with Cluster("Encrypted Data Storage", graph_attr={"bgcolor": "#ce93d8"}):
+                s3_app = S3("Application Data\n📁 Encrypted S3 Bucket\n• SSE-KMS Encryption\n• Versioning Enabled\n• MFA Delete Protection")
+                s3_analytics = S3("Analytics Data Lake\n📊 Big Data Storage\n• Read-Only Access\n• Data Lifecycle Policies\n• Cross-Region Replication")
+                s3_billing = S3("Financial Data\n💰 Billing & Cost Data\n• Finance Team Access\n• Compliance Retention\n• Audit Logging")
+                rds_prod = RDS("Production Database\n🗄️ Encrypted RDS\n• Encryption at Rest\n• TLS 1.3 in Transit\n• Automated Backups")
         
-        # Service Access
-        dev_role >> Edge(label="RW", color="blue") >> [s3_app, rds_dev, web_server, app_server]
-        analyst_role >> Edge(label="Read", color="green") >> [s3_analytics, rds_prod, cloudwatch]
-        ops_role >> Edge(label="Full", color="red") >> [waf, alb, web_server, app_server, cloudtrail, guardduty, security_hub, config, systems_manager]
-        finance_role >> Edge(label="Read", color="orange") >> [s3_billing, cloudwatch]
-        
-        # Monitoring flow
-        [web_server, app_server, rds_prod, s3_app] >> Edge(label="Audit", style="dashed") >> cloudtrail
-        guardduty >> Edge(label="Alert", color="red") >> sns >> operations
-
-def create_access_control_matrix():
-    """Generate access control matrix for specific user groups"""
-    
-    with Diagram("Access Control Matrix - Developer | Analyst | Operations | Finance", 
-                 filename="rbac_access_matrix", 
-                 show=False, 
-                 direction="LR"):
-        
-        # User Groups
-        with Cluster("User Groups"):
-            developer = User("Developer")
-            analyst = User("Analyst") 
-            operations = User("Operations")
-            finance = User("Finance")
+        # Layer 4: Application Security
+        with Cluster("🔧 LAYER 4: Application Security\n📦 Runtime Protection", 
+                     graph_attr={"bgcolor": "#e8f5e8", "style": "rounded,bold", "penwidth": "4", "color": "#4caf50"}):
             
-        # AWS Services
-        with Cluster("AWS Services - Access Levels"):
-            with Cluster("Compute"):
-                ec2 = EC2("EC2\n• Developer: Dev instances\n• Operations: Full\n• Others: None")
-                lambda_svc = Lambda("Lambda\n• Developer: Full\n• Operations: Read\n• Others: None")
+            container_security = EC2("Container Security\n📦 Image & Runtime Protection\n• Vulnerability Scanning\n• Runtime Monitoring\n• Policy Enforcement\n• Secure Base Images")
+        
+        # Layer 5: Monitoring & Compliance
+        with Cluster("👁️ LAYER 5: Monitoring & Compliance\n📊 Continuous Security Oversight", 
+                     graph_attr={"bgcolor": "#fff8e1", "style": "rounded,bold", "penwidth": "4", "color": "#ffc107"}):
+            
+            with Cluster("Audit & Compliance", graph_attr={"bgcolor": "#fff176"}):
+                cloudtrail = Cloudtrail("AWS CloudTrail\n📋 Comprehensive Audit Log\n• Multi-region Logging\n• Log File Validation\n• Immutable Records\n• Real-time Delivery")
+                config = Config("AWS Config\n✅ Compliance Monitoring\n• Resource Configuration\n• Compliance Rules\n• Drift Detection\n• Remediation Actions")
                 
-            with Cluster("Storage"):
-                s3 = S3("S3 Buckets\n• Developer: App data (RW)\n• Analyst: Analytics (R)\n• Finance: Billing (R)\n• Operations: Logs (RW)")
+            with Cluster("Threat Intelligence", graph_attr={"bgcolor": "#ffeb3b"}):
+                guardduty = Guardduty("Amazon GuardDuty\n🕵️ ML-Powered Threat Detection\n• Malware Detection\n• Anomaly Analysis\n• DNS Monitoring\n• Threat Intelligence")
                 
-            with Cluster("Database"):
-                rds = RDS("RDS\n• Developer: Dev DB (RW)\n• Analyst: Read replicas\n• Operations: Full\n• Finance: None")
+            with Cluster("Security Posture", graph_attr={"bgcolor": "#ffee58"}):
+                security_hub = SecurityHub("AWS Security Hub\n🎯 Centralized Dashboard\n• Finding Aggregation\n• Security Standards\n• Custom Insights\n• Compliance Scoring")
+                cloudwatch = Cloudwatch("Amazon CloudWatch\n📊 Metrics & Monitoring\n• Real-time Dashboards\n• Custom Metrics\n• Log Aggregation\n• Automated Alerting")
+        
+        # Layer 6: Incident Response
+        with Cluster("🚨 LAYER 6: Incident Response\n⚡ Automated Defense & Recovery", 
+                     graph_attr={"bgcolor": "#ffebee", "style": "rounded,bold", "penwidth": "4", "color": "#f44336"}):
+            
+            with Cluster("Alert & Notification", graph_attr={"bgcolor": "#ffcdd2"}):
+                sns = SNS("Amazon SNS\n📢 Multi-Channel Alerts\n• Email Notifications\n• SMS Alerts\n• Slack Integration\n• Escalation Policies")
                 
-            with Cluster("Security"):
-                iam_svc = IAM("IAM\n• Operations: Full\n• Others: Self-service")
-                kms_svc = KMS("KMS\n• Operations: Admin\n• Developer: App keys\n• Others: None")
-                
-            with Cluster("Monitoring"):
-                cw = Cloudwatch("CloudWatch\n• All: Metrics (R)\n• Operations: Logs (RW)\n• Finance: Billing (R)")
-                trail = Cloudtrail("CloudTrail\n• Operations: Full\n• Others: None")
+            with Cluster("Automated Response", graph_attr={"bgcolor": "#ef9a9a"}):
+                systems_manager = SystemsManager("AWS Systems Manager\n🔧 Automated Remediation\n• Incident Response\n• Patch Management\n• Evidence Collection\n• Recovery Procedures")
         
-        # Access relationships
-        developer >> Edge(label="RW", color="blue") >> [s3, lambda_svc, rds]
-        developer >> Edge(label="Limited", color="lightblue") >> [ec2, kms_svc]
+        # === ENHANCED SECURITY FLOW CONNECTIONS ===
         
-        analyst >> Edge(label="Read", color="green") >> [s3, rds, cw]
+        # External Threat Blocking
+        internet >> Edge(label="🚫 BLOCKED", color="red", style="bold", penwidth="3") >> waf
+        threats >> Edge(label="❌ NO ACCESS", color="red", style="dashed", penwidth="2") >> waf
         
-        operations >> Edge(label="Full", color="red") >> [ec2, s3, rds, iam_svc, kms_svc, cw, trail]
+        # User Authentication Flow (Green = Secure)
+        [developer, analyst, operations, finance] >> Edge(label="🔐 MFA REQUIRED", color="darkgreen", style="bold", penwidth="3") >> iam_mfa
         
-        finance >> Edge(label="Read", color="orange") >> [s3, cw]
+        # Role Assignment (Blue = Authorization)
+        iam_mfa >> Edge(label="✅ AUTHENTICATED", color="blue", style="bold", penwidth="2") >> [dev_role, analyst_role, ops_role, finance_role]
+        
+        # Network Access Flow (Blue = Network)
+        [dev_role, ops_role] >> Edge(label="🔒 AUTHORIZED", color="blue", penwidth="2") >> waf
+        waf >> Edge(label="🛡️ FILTERED", color="blue", style="bold", penwidth="3") >> alb
+        alb >> Edge(label="⚖️ BALANCED", color="blue", penwidth="2") >> web_server
+        web_server >> Edge(label="🔗 INTERNAL API", color="darkblue", penwidth="2") >> app_server
+        
+        # Data Encryption Flow (Purple = Data)
+        [web_server, app_server, security_lambda] >> Edge(label="🔑 ENCRYPTION", color="purple", style="bold", penwidth="3") >> kms
+        [web_server, app_server] >> Edge(label="🔒 CREDENTIALS", color="purple", penwidth="2") >> secrets
+        
+        # Data Access Patterns (Purple = Data Access)
+        dev_role >> Edge(label="📝 READ/WRITE", color="darkgreen", penwidth="2") >> s3_app
+        analyst_role >> Edge(label="📊 READ ONLY", color="orange", penwidth="2") >> s3_analytics
+        finance_role >> Edge(label="💰 BILLING", color="gold", penwidth="2") >> s3_billing
+        app_server >> Edge(label="🗄️ ENCRYPTED DB", color="purple", style="bold", penwidth="2") >> rds_prod
+        
+        # Security Monitoring (Gray = Monitoring)
+        [web_server, app_server, s3_app, rds_prod] >> Edge(label="📋 AUDIT TRAIL", color="gray", style="dashed", penwidth="1") >> cloudtrail
+        [web_server, app_server, rds_prod] >> Edge(label="🕵️ THREAT SCAN", color="red", style="dashed", penwidth="1") >> guardduty
+        [dev_role, analyst_role, ops_role, finance_role] >> Edge(label="✅ COMPLIANCE", color="green", style="dashed", penwidth="1") >> config
+        
+        # Security Intelligence Aggregation (Orange = Intelligence)
+        [cloudtrail, guardduty, config] >> Edge(label="🎯 FINDINGS", color="orange", penwidth="2") >> security_hub
+        [web_server, app_server, rds_prod] >> Edge(label="📊 METRICS", color="blue", style="dotted", penwidth="1") >> cloudwatch
+        
+        # Incident Response Flow (Red = Critical)
+        security_hub >> Edge(label="🚨 CRITICAL ALERT", color="red", style="bold", penwidth="4") >> sns
+        guardduty >> Edge(label="⚠️ THREAT DETECTED", color="red", style="bold", penwidth="3") >> security_lambda
+        sns >> Edge(label="📢 NOTIFY OPS", color="red", penwidth="2") >> operations
+        security_lambda >> Edge(label="🔧 AUTO REMEDIATE", color="red", penwidth="2") >> systems_manager
+        
+        # Container Security Integration (Orange = Security)
+        container_security >> Edge(label="📦 SECURE IMAGES", color="orange", penwidth="2") >> [web_server, app_server]
+        
+        # Feedback & Recovery Loops (Green = Recovery)
+        systems_manager >> Edge(label="🔄 REMEDIATION", color="green", style="dashed", penwidth="2") >> [web_server, app_server]
+        cloudwatch >> Edge(label="📊 PERFORMANCE", color="blue", style="dotted", penwidth="1") >> alb
 
 if __name__ == "__main__":
-    print("🔍 Generating RBAC Architecture for User Groups: Developer, Analyst, Operations, Finance...")
+    print("🎨 Generating Enhanced Zero-Trust Architecture Diagram...")
+    print("📊 Optimizing for maximum readability and professional presentation...")
     
-    create_rbac_architecture()
-    print("✅ RBAC architecture diagram generated")
+    create_enhanced_zero_trust_architecture()
     
-    create_access_control_matrix()
-    print("✅ Access control matrix diagram generated")
+    print("✅ Enhanced zero-trust architecture diagram generated!")
+    print("\n🎯 Professional Enhancements Applied:")
+    print("├── 🎨 Visual Excellence:")
+    print("│   ├── ✨ Color-coded layers with professional backgrounds")
+    print("│   ├── 🎯 Bold borders and distinct layer separation")
+    print("│   ├── 📐 Optimized spacing and typography")
+    print("│   └── 🏷️ Professional icons and descriptive labels")
+    print("├── 🔄 Flow Optimization:")
+    print("│   ├── 🌊 Clear security flow from external threats to protection")
+    print("│   ├── 🎨 Color-coded connection types (auth, data, monitoring)")
+    print("│   ├── ⚡ Weighted edges showing critical vs standard flows")
+    print("│   └── 🔄 Feedback loops for incident response")
+    print("├── 📖 Enhanced Readability:")
+    print("│   ├── 📝 Detailed service descriptions with key features")
+    print("│   ├── 🏗️ Logical grouping of related services")
+    print("│   ├── 🎯 Clear layer purposes and responsibilities")
+    print("│   └── 💼 Professional presentation suitable for executives")
+    print("└── 🛡️ Security Focus:")
+    print("    ├── 🎯 Zero-trust principles prominently displayed")
+    print("    ├── 🛡️ Defense-in-depth visualization")
+    print("    ├── ⚠️ Threat vectors and mitigation strategies")
+    print("    └── 🤖 Automated response workflows highlighted")
     
-    print("\n🎯 User Group Access Control!")
-    print("\n📁 Files created:")
-    print("├── zero_trust_rbac_architecture.png")
-    print("└── rbac_access_matrix.png")
-    
-    print("\n👥 User Groups & Access:")
-    print("├─ Developer: App development resources (S3, Lambda, Dev RDS, Dev EC2)")
-    print("├─ Analyst: Read-only analytics data (S3 analytics, RDS replicas, CloudWatch)")
-    print("├─ Operations: Full infrastructure access (EC2, monitoring, security services)")
-    print("└─ Finance: Billing and cost data (S3 billing, CloudWatch billing metrics)")
+    print(f"\n📁 Enhanced diagram saved: diagrams/zero_trust_architecture.png")
+    print("🎯 Optimized for employer presentations and technical reviews!")
+    print("💼 Professional quality suitable for C-level executives!")
