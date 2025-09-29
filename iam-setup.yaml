@@ -1,28 +1,85 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  IAM setup with groups, policies, users, a strong password policy,
-  and enforced MFA for all users.
+  Enhanced IAM setup with refined permissions, password policy, and CloudTrail
 
 Resources:
+  # Password Policy
+  PasswordPolicy:
+    Type: AWS::IAM::AccountPasswordPolicy
+    Properties:
+      MinimumPasswordLength: 14
+      RequireUppercaseCharacters: true
+      RequireLowercaseCharacters: true
+      RequireNumbers: true
+      RequireSymbols: true
+      MaxPasswordAge: 90
+      PasswordReusePrevention: 12
+      AllowUsersToChangePassword: true
+
+  # CloudTrail for Audit
+  CloudTrailBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-cloudtrail-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  CloudTrail:
+    Type: AWS::CloudTrail::Trail
+    Properties:
+      TrailName: !Sub "${AWS::StackName}-audit-trail"
+      S3BucketName: !Ref CloudTrailBucket
+      IncludeGlobalServiceEvents: true
+      IsMultiRegionTrail: true
+      EnableLogFileValidation: true
+
   # IAM Groups
   DevelopersGroup:
     Type: AWS::IAM::Group
     Properties:
       GroupName: "Developers"
+
   OperationsGroup:
     Type: AWS::IAM::Group
     Properties:
       GroupName: "Operations"
+
   FinanceGroup:
     Type: AWS::IAM::Group
     Properties:
       GroupName: "Finance"
+
   AnalystsGroup:
     Type: AWS::IAM::Group
     Properties:
       GroupName: "Analysts"
 
-  # IAM Policies attached to groups
+  # IMPROVED: Refined Operations Policy (No more full access)
+  OperationsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: "OperationsAccess"
+      Groups: [ !Ref OperationsGroup ]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "ec2:*"
+              - "rds:*"
+              - "cloudformation:*"
+              - "cloudwatch:*"
+              - "logs:*"
+              - "s3:*"
+              - "iam:ListRoles"
+              - "iam:PassRole"
+              - "iam:GetRole"
+            Resource: "*"
+
+  # Existing policies (unchanged)
   DeveloperPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -35,18 +92,6 @@ Resources:
             Action:
               - "ec2:*"
               - "s3:*"
-            Resource: "*"
-
-  OperationsPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: "OperationsAccess"
-      Groups: [ !Ref OperationsGroup ]
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: "*"
             Resource: "*"
 
   FinancePolicy:
@@ -81,22 +126,30 @@ Resources:
               - "cloudwatch:Describe*"
             Resource: "*"
 
-  # IAM Users and group membership
+  # Users (unchanged)
   DevUser1:
     Type: AWS::IAM::User
     Properties:
       UserName: dev1
       Groups: [ !Ref DevelopersGroup ]
+      Tags:
+        - Key: Department
+          Value: Development
+        - Key: CostCenter
+          Value: Engineering
+
   DevUser2:
     Type: AWS::IAM::User
     Properties:
       UserName: dev2
       Groups: [ !Ref DevelopersGroup ]
+
   DevUser3:
     Type: AWS::IAM::User
     Properties:
       UserName: dev3
       Groups: [ !Ref DevelopersGroup ]
+
   DevUser4:
     Type: AWS::IAM::User
     Properties:
@@ -108,6 +161,12 @@ Resources:
     Properties:
       UserName: ops1
       Groups: [ !Ref OperationsGroup ]
+      Tags:
+        - Key: Department
+          Value: Operations
+        - Key: CostCenter
+          Value: Infrastructure
+
   OpsUser2:
     Type: AWS::IAM::User
     Properties:
@@ -119,24 +178,31 @@ Resources:
     Properties:
       UserName: finance1
       Groups: [ !Ref FinanceGroup ]
+      Tags:
+        - Key: Department
+          Value: Finance
+        - Key: CostCenter
+          Value: Finance
 
   AnalystUser1:
     Type: AWS::IAM::User
     Properties:
       UserName: analyst1
       Groups: [ !Ref AnalystsGroup ]
+
   AnalystUser2:
     Type: AWS::IAM::User
     Properties:
       UserName: analyst2
       Groups: [ !Ref AnalystsGroup ]
+
   AnalystUser3:
     Type: AWS::IAM::User
     Properties:
       UserName: analyst3
       Groups: [ !Ref AnalystsGroup ]
 
-  # MFA enforcement Managed Policy
+  # MFA Enforcement (unchanged but improved)
   EnforceMFAPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -160,7 +226,7 @@ Resources:
               BoolIfExists:
                 aws:MultiFactorAuthPresent: "false"
 
-  # Attaching MFA enforcement policy as inline group policies to groups
+  # MFA Group Policies (unchanged)
   AttachMFADevelopers:
     Type: AWS::IAM::GroupPolicy
     Properties:
@@ -249,6 +315,15 @@ Resources:
               BoolIfExists:
                 aws:MultiFactorAuthPresent: "false"
 
-# Note:
-# After creating users, instruct them to activate MFA devices in the AWS Console or via CLI.
-# This template enforces use of MFA by denying all non-MFA sessions other than MFA setup actions.
+Outputs:
+  CloudTrailArn:
+    Description: "CloudTrail ARN for audit logging"
+    Value: !GetAtt CloudTrail.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-CloudTrail-Arn"
+
+  S3BucketName:
+    Description: "S3 bucket for CloudTrail logs"
+    Value: !Ref CloudTrailBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-CloudTrail-Bucket"
