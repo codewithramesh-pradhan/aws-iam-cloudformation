@@ -29,11 +29,18 @@ This project addresses **critical enterprise security challenges** by implementi
 | **Operational Costs** | $200K/year | $50K/year | 75% cost savings |
 | **Security Incidents** | 12/year | 0/year | Zero breaches |
 
-## 🏗️ Architecture Overview
+## 🏗️ Complete DevSecOps Architecture
 
-![AWS IAM Architecture](architecture-diagram.png)
+![AWS IAM DevSecOps Architecture](aws-iam-devops-architecture.png)
 
-Enterprise-grade AWS Identity and Access Management (IAM) solution implementing **role-based access control (RBAC)** with comprehensive security controls, audit logging, and compliance features through **Infrastructure as Code**.
+**Enterprise-grade AWS Identity and Access Management (IAM) solution** implementing **role-based access control (RBAC)** with comprehensive security controls, **GitHub Actions CI/CD pipeline**, audit logging, and compliance features through **Infrastructure as Code**.
+
+### **Architecture Components**
+- **🔄 CI/CD Pipeline**: GitHub Actions with automated validation and security scanning
+- **🏗️ Infrastructure as Code**: CloudFormation template with 8,915+ lines of production code
+- **🔐 Security Controls**: Universal MFA enforcement, password policies, audit logging
+- **👥 Role-Based Access**: 4 groups with least-privilege permissions for 10 users
+- **📊 Compliance**: SOC 2, ISO 27001, CIS benchmark alignment
 
 ## 🎯 **Technical Skills Demonstrated**
 
@@ -128,7 +135,7 @@ Enterprise-grade AWS Identity and Access Management (IAM) solution implementing 
 
 ### Security Controls
 - **🔑 MFA Enforcement**: Mandatory for all users
-- **🔒 Password Policy**: 14-char minimum, complexity required
+- **🔒 Password Policy**: 14-char minimum, complexity required (via script)
 - **📝 Audit Logging**: Multi-region CloudTrail with log validation
 - **🛡️ Least Privilege**: Minimal required permissions per role
 
@@ -138,7 +145,7 @@ Enterprise-grade AWS Identity and Access Management (IAM) solution implementing 
 - AWS CLI configured with admin permissions
 - CloudFormation deployment permissions
 
-### Deploy in 3 Steps
+### Deploy in 4 Steps
 ```bash
 # 1. Validate template
 aws cloudformation validate-template --template-body file://iam-setup.yaml
@@ -149,8 +156,11 @@ aws cloudformation create-stack \
   --template-body file://iam-setup.yaml \
   --capabilities CAPABILITY_IAM
 
-# 3. Verify deployment
+# 3. Wait for completion
 aws cloudformation wait stack-create-complete --stack-name iam-rbac-production
+
+# 4. Set up password policy
+./setup-password-policy.sh
 ```
 
 ## 🔐 Security Implementation
@@ -170,11 +180,18 @@ EnforceMFAPolicy:
               aws:MultiFactorAuthPresent: "false"
 ```
 
-### Password Policy
-- **Minimum Length**: 14 characters
-- **Complexity**: Upper, lower, numbers, symbols
-- **Rotation**: 90-day maximum age
-- **History**: Prevents reuse of last 12 passwords
+### Password Policy (Post-Deployment)
+```bash
+# Automated via setup-password-policy.sh
+aws iam put-account-password-policy \
+  --minimum-password-length 14 \
+  --require-uppercase-characters \
+  --require-lowercase-characters \
+  --require-numbers \
+  --require-symbols \
+  --max-password-age 90 \
+  --password-reuse-prevention 12
+```
 
 ## 📊 Monitoring & Compliance
 
@@ -235,18 +252,19 @@ jobs:
 
 ```
 aws-iam-cloudformation/
-├── iam-setup.yaml              # Main CloudFormation template
-├── architecture-diagram.png    # Infrastructure architecture
-├── README.md                   # This documentation
-├── .github/workflows/          # CI/CD automation
-├── screenshots/                # Implementation screenshots
-└── docs/                      # Additional documentation
+├── iam-setup.yaml                    # Main CloudFormation template
+├── aws-iam-devops-architecture.png   # Complete DevSecOps architecture
+├── setup-password-policy.sh          # Password policy configuration script
+├── README.md                         # This documentation
+├── .github/workflows/                # CI/CD automation
+├── screenshots/                      # Implementation screenshots
+└── docs/                            # Additional documentation
 ```
 
 ## 📈 **Why This Project Stands Out**
 
 ### **Technical Excellence**
-- **Production-Ready Code**: 8,915 lines of enterprise CloudFormation
+- **Production-Ready Code**: 8,915+ lines of enterprise CloudFormation
 - **Security-First Design**: Zero-trust architecture with comprehensive controls
 - **Automation Focus**: CI/CD pipeline with security scanning and validation
 - **Scalable Architecture**: Supports enterprise-scale user management
@@ -267,7 +285,7 @@ aws-iam-cloudformation/
 
 ### For Employers/Reviewers
 1. **Clone Repository**: `git clone [repository-url]`
-2. **Review Architecture**: See `architecture-diagram.png`
+2. **Review Architecture**: See `aws-iam-devops-architecture.png`
 3. **Examine Code**: CloudFormation template in `iam-setup.yaml`
 4. **Check Screenshots**: Implementation evidence in `/screenshots`
 5. **Test Deployment**: Follow quick deployment steps above
@@ -275,6 +293,7 @@ aws-iam-cloudformation/
 ### Production Deployment
 - See `docs/COMPLETE_DOCUMENTATION.md` for detailed implementation guide
 - Follow `docs/QUICK_START.md` for rapid deployment
+- Use `DEPLOYMENT_CHECKLIST.md` for step-by-step validation
 - Review screenshots for visual implementation guidance
 
 ---
