@@ -11,6 +11,67 @@
 
 Enterprise-grade AWS Identity and Access Management (IAM) solution implementing **role-based access control (RBAC)** with comprehensive security controls, audit logging, and compliance features through **Infrastructure as Code**.
 
+## 📸 Implementation Screenshots
+
+### CloudFormation Stack Deployment
+![CloudFormation Stack](screenshots/cloudformation_Stacks_outputspng.png)
+*CloudFormation stack showing successful deployment of all IAM resources*
+
+### IAM Groups and Users
+![IAM User Groups](screenshots/user_groups.png)
+*IAM groups overview showing all created groups with their users*
+
+### Group Permissions Configuration
+
+#### Developers Group
+![Developers Users](screenshots/developers-users.png)
+*Developers group with 4 users (dev1-dev4)*
+
+![Developers Permissions](screenshots/developers-granting-permissions.png)
+*Developers group permissions showing EC2 and S3 full access*
+
+#### Operations Group
+![Operations Users](screenshots/operations-users.png)
+*Operations group with 2 users (ops1-ops2)*
+
+![Operations Permissions](screenshots/operations-granting-permissions.png)
+*Operations group permissions showing comprehensive infrastructure access*
+
+#### Finance Group
+![Finance User](screenshots/finance-user.png)
+*Finance group with 1 user (finance1)*
+
+![Finance Permissions](screenshots/finance-granting-permissions.png)
+*Finance group permissions showing billing and cost management access*
+
+#### Analysts Group
+![Analysts Users](screenshots/analyst-users.png)
+*Analysts group with 3 users (analyst1-analyst3)*
+
+![Analysts Permissions](screenshots/analysts-granting-permissions.png)
+*Analysts group permissions showing read-only access to AWS services*
+
+### Security Configuration
+![Password Policy](screenshots/password-policy.png)
+*Account password policy with enterprise-grade security requirements*
+
+### Audit and Compliance
+![CloudTrail Configuration](screenshots/cloudtrail_audit_trail.png)
+*CloudTrail audit trail configuration for comprehensive logging*
+
+![S3 Audit Bucket](screenshots/S3_Iam-setup-stack-cloudtrail_object.png)
+*S3 bucket storing CloudTrail logs with secure configuration*
+
+### CI/CD Pipeline
+![GitHub Actions Workflow](screenshots/github-action-validate.png)
+*GitHub Actions workflow for automated template validation*
+
+![GitHub Actions Job Details](screenshots/github-action-validate-job.png)
+*Detailed view of CI/CD pipeline execution with security scanning*
+
+![CI/CD Overview](screenshots/github-cicd.png)
+*Complete CI/CD pipeline overview showing automated validation steps*
+
 ## 🎯 Key Features
 
 - **🔐 Security First**: Universal MFA enforcement and enterprise password policies
@@ -190,13 +251,13 @@ This project demonstrates:
 1. **Clone Repository**: `git clone [repository-url]`
 2. **Review Architecture**: See `architecture-diagram.png`
 3. **Examine Code**: CloudFormation template in `iam-setup.yaml`
-4. **Check Documentation**: Comprehensive guides in `/docs`
+4. **Check Screenshots**: Implementation evidence in `/screenshots`
 5. **Test Deployment**: Follow quick deployment steps above
 
 ### Production Deployment
-- See `COMPLETE_DOCUMENTATION.md` for detailed implementation guide
-- Follow `QUICK_START.md` for rapid deployment
-- Use `SCREENSHOT_CAPTURE_GUIDE.md` for documentation
+- See `docs/COMPLETE_DOCUMENTATION.md` for detailed implementation guide
+- Follow `docs/QUICK_START.md` for rapid deployment
+- Review screenshots for visual implementation guidance
 
 ---
 
